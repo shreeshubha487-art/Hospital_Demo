@@ -1,0 +1,18 @@
+import { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+
+export default function Doctors() {
+  const [reports, setReports] = useState([]); const [doctorName, setDoctorName] = useState(""); const [doctors, setDoctors] = useState([]); const [search, setSearch] = useState("");
+  useEffect(() => { setReports(JSON.parse(localStorage.getItem("hospitalReports")) || []); setDoctors(JSON.parse(localStorage.getItem("doctors")) || []); }, []);
+  const addDoctor = () => { if (!doctorName.trim()) return; const updated = [...doctors, { id: Date.now(), name: doctorName.trim() }]; setDoctors(updated); localStorage.setItem("doctors", JSON.stringify(updated)); setDoctorName(""); };
+  const removeDoctor = (id) => { const updated = doctors.filter((d) => d.id !== id); setDoctors(updated); localStorage.setItem("doctors", JSON.stringify(updated)); };
+  const filtered = reports.filter((r) => `${r.patientName} ${r.block} ${r.reportText}`.toLowerCase().includes(search.toLowerCase()));
+  return <div className="app-shell"><Sidebar /><main className="main"><Navbar title="Doctors & Patient Reports" />
+    <section className="content-grid two-column">
+      <div className="panel"><div className="panel-heading"><div><h3>Add doctor</h3><p>Register a doctor for appointment booking.</p></div></div><div className="inline-form"><input value={doctorName} onChange={(e) => setDoctorName(e.target.value)} placeholder="Doctor name" onKeyDown={(e) => e.key === "Enter" && addDoctor()} /><button className="primary-button" onClick={addDoctor}>Add doctor</button></div><div className="doctor-list">{doctors.length === 0 ? <div className="empty-state compact"><span>⚕</span><p>No doctors added yet.</p></div> : doctors.map((d, i) => <div className="doctor-row" key={d.id}><div className="doctor-avatar">{d.name.charAt(0).toUpperCase()}</div><div><strong>{d.name}</strong><span>Medical staff · ID {String(i + 1).padStart(3, "0")}</span></div><button className="delete-button" onClick={() => removeDoctor(d.id)} title="Remove doctor">×</button></div>)}</div></div>
+      <div className="panel info-panel"><div className="info-hero">⚕</div><h3>Doctor directory</h3><p>{doctors.length} doctor{doctors.length === 1 ? "" : "s"} registered in this prototype.</p><div className="info-stat"><span>Appointment-ready</span><strong>{doctors.length}</strong></div><div className="info-stat"><span>Reports available</span><strong>{reports.length}</strong></div></div>
+    </section>
+    <section className="panel"><div className="panel-heading list-heading"><div><h3>All patient reports</h3><p>Review reports from the hospital workspace.</p></div><div className="search-box"><span>⌕</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patient or department..." /></div></div>{filtered.length === 0 ? <div className="empty-state"><span>▤</span><h3>No reports found</h3><p>Patient reports will appear here after upload.</p></div> : <div className="table-wrap"><table><thead><tr><th>Patient</th><th>Department</th><th>Report</th><th>File</th></tr></thead><tbody>{filtered.map((r) => <tr key={r.id}><td><div className="patient-cell"><div className="mini-avatar">{r.patientName?.charAt(0)?.toUpperCase()}</div><strong>{r.patientName}</strong></div></td><td><span className="tag">{r.block}</span></td><td className="details-cell">{r.reportText || "No text details"}</td><td>{r.file ? <a className="file-link" href={r.file} target="_blank" rel="noopener noreferrer" download={r.fileName}>View / download ↗</a> : <span className="muted">Text only</span>}</td></tr>)}</tbody></table></div>}</section>
+  </main></div>;
+}
